@@ -1,11 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application, convert_xor
 
 from scipy.integrate import quad
 import scipy
 
-def f(x):# target function
-    return 1/x
+
+def targetFunction(text,x):# target function
+    transformations = (standard_transformations + (implicit_multiplication_application, convert_xor))
+    target_function = parse_expr(text,transformations=transformations)
+    return eval(f"{target_function}({x})")
+
+inputText = input("Enter the LaTeX FUNCTION OF X to be evaluated.  This will be the target function: ")# User inputs latex function
 
 # Example: basis functions
 def g1(x): return np.exp(x)
@@ -27,7 +33,7 @@ for i in range(n):
 # Right hand side
 rightSide = np.zeros(n)
 for var in range(n):
-    rightSide[var], _ = quad(lambda x: f(x) * basis[var](x), intervala, intervalb)
+    rightSide[var], _ = quad(lambda x: targetFunction(x) * basis[var](x), intervala, intervalb)
 
 coefficient = np.linalg.solve(G, rightSide)
 
@@ -35,13 +41,14 @@ coefficient = np.linalg.solve(G, rightSide)
 def approx(x):
     return sum(coefficient[i] * basis[i](x) for i in range(n))
 
-error = np.sqrt(quad(lambda x: (f(x) - approx(x))**2, intervala, intervalb)[0])
+error = np.sqrt(quad(lambda x: (targetFunction(x) - approx(x))**2, intervala, intervalb)[0])
 
 print("Coefficients:", coefficient)
 print("L2 approximation error:", error)
 
+
 xs = np.linspace(intervala, intervalb, 256)
-ys_f = [f(x) for x in xs]
+ys_f = [targetFunction(inputText,x) for x in xs]
 ys_approx = [approx(x) for x in xs]
 
 plt.figure(figsize=(8,5))
