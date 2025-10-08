@@ -1,13 +1,27 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sympy import symbols, lambdify
 
 
 from scipy.integrate import quad
 import scipy
-# Example: target function
-def f(x):
-   return 1/x
+from sympy.parsing.sympy_parser import standard_transformations, implicit_multiplication_application, convert_xor, \
+    parse_expr
 
+x = symbols('x')
+inputTarget = input('Enter the target function: ')
+
+'''
+inputg1 = input('Enter the first function: ')
+inputg2 = input('Enter the second function: ')
+inputg3 = input('Enter the third function: ')
+'''
+# Target function
+def targetFunction(text, x):
+    transformations = (standard_transformations + (implicit_multiplication_application, convert_xor))
+    target_function = parse_expr(text, transformations=transformations)
+    f = lambdify(symbols('x'), target_function, 'numpy')
+    return f(x)
 
 # Example: basis functions
 def g1(x): return np.exp(x)
@@ -33,7 +47,7 @@ for i in range(n):
 # Right hand side
 rightSide = np.zeros(n)
 for var in range(n):
-   rightSide[var], _ = quad(lambda x: f(x) * basis[var](x), intervala, intervalb)
+    rightSide[var], _ = quad(lambda x: targetFunction(inputTarget, x) * basis[var](x), intervala, intervalb)
 
 
 coefficient = np.linalg.solve(G, rightSide)
@@ -44,7 +58,7 @@ def approx(x):
    return sum(coefficient[i] * basis[i](x) for i in range(n))
 
 
-error = np.sqrt(quad(lambda x: (f(x) - approx(x))**2, intervala, intervalb)[0])
+error = np.sqrt(quad(lambda x: (targetFunction(inputTarget, x) - approx(x))**2, intervala, intervalb)[0])
 
 
 print("Coefficients:", coefficient)
@@ -52,7 +66,7 @@ print("L2 approximation error:", error)
 
 
 xs = np.linspace(intervala, intervalb, 256)
-ys_f = [f(x) for x in xs]
+ys_f = [targetFunction(inputTarget, x) for x in xs]
 ys_approx = [approx(x) for x in xs]
 
 
